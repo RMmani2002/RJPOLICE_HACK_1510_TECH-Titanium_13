@@ -1,6 +1,11 @@
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class FingerprintManager {
+  final databaseReference = FirebaseDatabase.instance.reference().child('user');
+  final userId = FirebaseAuth.instance.currentUser!.uid;
   LocalAuthentication authentication = LocalAuthentication();
 
   Future<bool> authenticate() async {
@@ -16,24 +21,25 @@ class FingerprintManager {
           stickyAuth: true,
         ),
       );
-    } on Exception catch (e) {
-      print(e);
+    } on PlatformException catch (e) {
+      print("Authentication Error: $e");
       return false;
     }
   }
 
-  void executeAlgorithm() {
-    // Your algorithm or logic here
-    print('Executing my algorithm!');
+  void pushFingerprintStatus(bool isFingerprintAuthenticated) {
+    String status = isFingerprintAuthenticated ? 'true' : 'false';
+    databaseReference.child(userId).child('fingerprint').child('status').set(status);
   }
 
-  void performAuthenticationAndAlgorithm() async {
+  void performAuthenticationAndPushStatus() async {
     bool isAuthenticated = await authenticate();
+    pushFingerprintStatus(isAuthenticated);
+
     if (isAuthenticated) {
-      executeAlgorithm();
+      print('Fingerprint authentication successful!');
     } else {
-      // Handle failed authentication
-      print('Authentication failed!');
+      print('Fingerprint authentication failed!');
     }
   }
 }
@@ -41,7 +47,6 @@ class FingerprintManager {
 void main() async {
   FingerprintManager fingerprintManager = FingerprintManager();
 
-  
-  // Call the function to perform authentication and execute the algorithm
-  fingerprintManager.performAuthenticationAndAlgorithm();
+  // Call the function to perform authentication and push status to the database
+  fingerprintManager.performAuthenticationAndPushStatus();
 }

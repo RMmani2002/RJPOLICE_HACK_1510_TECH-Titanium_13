@@ -14,6 +14,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:local_auth/local_auth.dart';
 import 'sos.dart';
+import 'algorithm.dart';
 
 var size,height,width;
 final userId = FirebaseAuth.instance.currentUser!.uid;
@@ -572,6 +573,7 @@ class Page2 extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () async {
                                 ///to do
+                                FingerprintManager().performAuthenticationAndPushStatus();
                               },
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red, // Change this to the desired color
