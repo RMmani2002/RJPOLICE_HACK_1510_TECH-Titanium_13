@@ -6,13 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:slide_countdown/slide_countdown.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:local_auth/local_auth.dart';
+import 'main.dart';
 import 'sos.dart';
 import 'algorithm.dart';
 
@@ -114,7 +117,7 @@ class _HomepageState extends State<Homepage> {
                       size: 30,
                     ),
                   ),
-                  Text("List"),
+                  //Text("List"),
                 ]),),
 
           Container(
@@ -139,7 +142,7 @@ class _HomepageState extends State<Homepage> {
                       size: 30,
                     ),
                   ),
-                  Text("Home"),
+                  //Text("Home"),
                 ]),),
 
 
@@ -166,7 +169,7 @@ class _HomepageState extends State<Homepage> {
                       size: 30,
                     ),
                   ),
-                  Text("messages"),
+                  //Text("messages"),
                 ]),),
 
           Container(
@@ -192,7 +195,7 @@ class _HomepageState extends State<Homepage> {
                       size: 30,
                     ),
                   ),
-                  Text("Profile"),
+                 // Text("Profile"),
                 ]
             ),
           ),
@@ -211,6 +214,11 @@ class Page1 extends StatelessWidget {
   final ref = FirebaseDatabase.instance.reference().child('users');
   final DatabaseReference _database = FirebaseDatabase.instance.reference();
   final userId = FirebaseAuth.instance.currentUser!.uid;
+  DateTime? firstUpcomingEventDate;
+  double? lat;
+  double? log;
+  OverlayEntry? overlayEntry;
+  bool isWithinRange = true;
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
@@ -270,23 +278,53 @@ class Page1 extends StatelessWidget {
                               return Center(child: Text('Event details not available'));
                             } else {
                               Map<dynamic, dynamic> eventData = eventSnapshot.data!.snapshot.value;
+                              // Check if the event has a valid date
+                              // if (eventData.containsKey('date')) {
+                              //   DateTime eventDate = DateTime.parse(eventData['date']);
+                              //
+                              //   // Check if the event is upcoming
+                              //   if (eventDate.isAfter(DateTime.now()) &&
+                              //       (firstUpcomingEventDate == null || eventDate.isBefore(firstUpcomingEventDate!))) {
+                              //     firstUpcomingEventDate = eventDate;
+                              //
+                              //     // Retrieve and store latitude for the first upcoming event
+                              //     if (eventData.containsKey('lat') || eventData.containsKey('log') ) {
+                              //       lat = double.tryParse(eventData['lat'].toString());
+                              //       log = double.tryParse(eventData['log'].toString());
+                              //     }
+                              //   }
+                              // }
+                              if (eventData.containsKey('lat') || eventData.containsKey('log') ) {
+                                lat = double.tryParse(eventData['lat'].toString());
+                                log = double.tryParse(eventData['log'].toString());
+                              }
 
-                            //
-                            //   Text('Date: ${eventData['date'] ?? 'Date not available'}'),
-                            // Text('Time: ${eventData['time'] ?? 'Time not available'}'),
-                            // Text('Location: ${eventData['location'] ?? 'Location not available'}'),
+                              if (lat != null && log != null) {
+                                checkLocation(lat! , log!); // Check location against specified range
+                              }
+
+
+                                      if (!isWithinRange) {
+                                        //_showOverlay();
+                                        _otpOverlay(context);
+                                       // FingerprintManager().performAuthenticationAndPushStatus();
+                                      }
+
+
 
                               return Padding(
                                 padding: const EdgeInsets.fromLTRB(20,10,20,10),
-                                child: PhysicalModel(
+                                child:
+                                PhysicalModel(
                             color: Colors.red,
                             elevation: 10,
                             shadowColor: Colors.black,
                             borderRadius: BorderRadius.circular(5),
-                            child:Padding(
-                            padding: const EdgeInsets.fromLTRB(5,10,5,10),
+                            // child:Padding(
+                            // padding: const EdgeInsets.fromLTRB(5,10,5,10),
                             child: Container(
                             width: width*0.9,
+                            //height:height*0.15,
                             child: Column(
                             children: [
                             Container(
@@ -296,7 +334,7 @@ class Page1 extends StatelessWidget {
                             Container(
                             child: Row(children: [
                             Icon(Icons.date_range_outlined,size:30,color: Colors.white,),
-                            Text(eventData['date']?? 'Date not available',style: TextStyle(color: Colors.white,
+                            Text(eventData['date']?? 'Date nill',style: TextStyle(color: Colors.white,
                             fontSize: 20,),),
                             ],)
                             ),
@@ -304,7 +342,7 @@ class Page1 extends StatelessWidget {
                             Container(
                             child: Row(children: [
                             Icon(Icons.access_time,size:30,color: Colors.white,),
-                            Text(eventData['time']?? 'Time not available',style: TextStyle(color: Colors.white,
+                            Text(eventData['time']?? 'Time nill',style: TextStyle(color: Colors.white,
                             fontSize: 20,),),
                             ],
                             )
@@ -313,7 +351,7 @@ class Page1 extends StatelessWidget {
                             ),
                             ),
                             Container(
-                            child: Text(eventData['event']?? 'Event Name not available',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
+                            child: Text(eventData['event']?? 'Event nill',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
                             fontSize: 20,),
                             ),
                             ),
@@ -325,9 +363,21 @@ class Page1 extends StatelessWidget {
                             Container(
                             child: Row(
                             children: [
-                            Icon(Icons.location_on_outlined,size:30,color: Colors.white,),
-                            Text(eventData['location']?? 'Location not available',style: TextStyle(color: Colors.white,
-                            fontSize: 20,),),
+                              Container(
+                                child: Icon(Icons.location_on_outlined,size:30,color: Colors.white,),
+                              ),
+                            Container(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(eventData['location']?? 'Location nill',
+                                    maxLines: 2, // Limit the number of lines
+                                    overflow: TextOverflow.ellipsis,style: TextStyle(color: Colors.white,
+                                    fontSize: 20,),) ,
+                                ],
+                              )
+                            ),
+
                             ],
                             ),
                             ),
@@ -338,7 +388,7 @@ class Page1 extends StatelessWidget {
                             ]
                             ),
                             ),
-                            ),
+                           // ),
                                 ),
                               );
                             }
@@ -360,7 +410,182 @@ class Page1 extends StatelessWidget {
                     ),
                 );
               }
-            }
+
+// Function to check if the user's location is within the specified range
+Future<void> checkLocation(double lat, double log) async {
+  try {
+    checkLocationPermission();
+    Position currentPosition = await Geolocator.getCurrentPosition();
+    double distanceInMeters = Geolocator.distanceBetween(lat, log, currentPosition.latitude, currentPosition.longitude);
+
+    // Set isWithinRange based on your specified range (e.g., 100 meters)
+    isWithinRange = distanceInMeters >= 100;
+    FingerprintManager().performAuthenticationAndPushStatus();
+  } catch (e) {
+    print('Error checking location: $e');
+  }
+}
+
+  Future<bool> checkLocationPermission() async {
+    PermissionStatus status = await Permission.location.status;
+
+    if (status == PermissionStatus.granted) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
+  void _otpOverlay(BuildContext context) async {
+
+    OverlayState overlayState = Overlay.of(context);
+
+    OverlayEntry overlayEntry3;
+
+
+    overlayEntry3 = OverlayEntry(builder: (context) {
+
+
+      return Positioned(
+        left: MediaQuery.of(context).size.width * 0.05,
+        top: MediaQuery.of(context).size.height * 0.04,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.2,
+            color: Colors.red.shade400,
+            child: Material(
+              color: Colors.transparent,
+
+              child: Column(
+                children: [
+
+
+                  InkWell(
+                    onTap: (){
+                      _removeOverlay();
+                    },
+                    child: Container(child:
+                    Row(
+                      children: [
+                        SizedBox(width: MediaQuery.of(context).size.width * 0.84,),
+                        Icon(Icons.close,color: Colors.white,),
+                      ],
+                    ),
+                    ),
+                  ),
+
+
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.1,),
+
+                  Container(child: Row(
+                    children: [
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.05,),
+
+                     // Icon(Icons.check_circle_outline_outlined,color: Colors.white,size : 50.0,),
+
+                      Container(
+                        child:
+                        Text('Your Out of Range',
+                            style: TextStyle(
+                                fontSize: MediaQuery.of(context).size.height * 0.03,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)
+                        ),
+                      ),
+
+                    ],
+                  ),
+                  ),
+
+                  // SizedBox(height: MediaQuery.of(context).size.height * 0.02,),
+                  //
+                  // Container(child:  Text('OTP has been Sent to Registered Moblie Number',
+                  //     style: TextStyle(
+                  //         fontSize: MediaQuery.of(context).size.height * 0.02,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.white)
+                  // ),
+                  // ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    );
+
+
+    //overlayState.insertAll([overlayEntry3]);
+
+
+    await Future.delayed(Duration(seconds: 3));
+
+    overlayEntry3.remove();
+  }
+
+  void _removeOverlay() {
+    if (overlayEntry != null) {
+      overlayEntry!.remove();
+      overlayEntry = null;
+    }
+  }
+
+
+
+
+// void _showOverlay() {
+  //   overlayEntry = OverlayEntry(
+  //     builder: (context) => Positioned(
+  //       top: height*0.1,
+  //       left: width*0.15,
+  //       child: Material(
+  //         color: Colors.transparent,
+  //         child: Container(
+  //
+  //           height: height*0.15,
+  //           width: width*0.7,
+  //           decoration: BoxDecoration(
+  //             color: Colors.green,
+  //             borderRadius: BorderRadius.circular(5),
+  //           ),
+  //           child: Column(
+  //             children: [
+  //               Padding(padding: EdgeInsets.fromLTRB(230, 0, 0, 2),
+  //                 child: IconButton(
+  //                   icon: Icon(Icons.close),
+  //                   onPressed: () {
+  //                     _removeOverlay();
+  //                   },
+  //                 ),),
+  //               Text(
+  //                 "Return" ,
+  //                 style: TextStyle(color: Colors.white),
+  //                 textAlign: TextAlign.center,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  //
+  //   Overlay.of(context)?.insert(overlayEntry!);
+  // }
+  //
+  // void _removeOverlay() {
+  //   if (overlayEntry != null) {
+  //     overlayEntry!.remove();
+  //     overlayEntry = null;
+  //   }
+  // }
+
+}
+
+
 
 
 DateTime now = DateTime.now();
@@ -439,7 +664,7 @@ class Page2 extends StatelessWidget {
 
               Container(
                 width: width*0.7,
-                height:height*0.09,
+                height:height*0.1,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color:Colors.transparent,
@@ -573,7 +798,7 @@ class Page2 extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () async {
                                 ///to do
-                                FingerprintManager().performAuthenticationAndPushStatus();
+                                /// FingerprintManager().performAuthenticationAndPushStatus();
                               },
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red, // Change this to the desired color

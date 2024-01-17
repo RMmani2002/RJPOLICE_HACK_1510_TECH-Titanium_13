@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'main.dart';
+
 class SosPage extends StatefulWidget {
   @override
   _SosPageState createState() => _SosPageState();
@@ -199,6 +201,7 @@ class _SosPageState extends State<SosPage> {
                 ),
                 child: Text('Submit',style: TextStyle(color: Colors.white,),),
               ),
+
             ],
           ),
         ),
@@ -283,4 +286,5 @@ class _SosPageState extends State<SosPage> {
       overlayEntry = null;
     }
   }
+
 }
