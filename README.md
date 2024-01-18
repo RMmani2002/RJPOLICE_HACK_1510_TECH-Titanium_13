@@ -2,6 +2,9 @@
 
 A new Flutter project.
 
+Check here for PPT
+RJPOLICE_HACK_1510_TECH-Titanium_13(PPT).pdf
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
