@@ -2,20 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:slide_countdown/slide_countdown.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
-import 'package:local_auth/local_auth.dart';
-import 'main.dart';
+import 'package:tracking/break.dart';
 import 'sos.dart';
 import 'algorithm.dart';
 
@@ -109,7 +102,7 @@ class _HomepageState extends State<Homepage> {
                         ? const Icon(
                       Icons.event_available,
                       color:Colors.red,
-                      size: 35,
+                      size: 40,
                     )
                         : const Icon(
                       Icons.event_available_outlined,
@@ -134,7 +127,7 @@ class _HomepageState extends State<Homepage> {
                         ? const Icon(
                       Icons.home,
                       color:Colors.red,
-                      size: 35,
+                      size: 40,
                     )
                         : const Icon(
                       Icons.home_outlined,
@@ -161,7 +154,7 @@ class _HomepageState extends State<Homepage> {
                         ? const Icon(
                       Icons.message,
                       color:Colors.red,
-                      size: 35,
+                      size: 40,
                     )
                         : const Icon(
                       Icons.message_outlined,
@@ -187,7 +180,7 @@ class _HomepageState extends State<Homepage> {
                         ? const Icon(
                       Icons.person,
                       color:Colors.red,
-                      size: 35,
+                      size: 40,
                     )
                         : const Icon(
                       Icons.person_outline,
@@ -411,10 +404,17 @@ class Page1 extends StatelessWidget {
                 );
               }
 
+
+
+
+
+
+
+
+
 // Function to check if the user's location is within the specified range
 Future<void> checkLocation(double lat, double log) async {
   try {
-    checkLocationPermission();
     Position currentPosition = await Geolocator.getCurrentPosition();
     double distanceInMeters = Geolocator.distanceBetween(lat, log, currentPosition.latitude, currentPosition.longitude);
 
@@ -425,16 +425,6 @@ Future<void> checkLocation(double lat, double log) async {
     print('Error checking location: $e');
   }
 }
-
-  Future<bool> checkLocationPermission() async {
-    PermissionStatus status = await Permission.location.status;
-
-    if (status == PermissionStatus.granted) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
 
   void _otpOverlay(BuildContext context) async {
@@ -537,53 +527,11 @@ Future<void> checkLocation(double lat, double log) async {
 
 
 
-// void _showOverlay() {
-  //   overlayEntry = OverlayEntry(
-  //     builder: (context) => Positioned(
-  //       top: height*0.1,
-  //       left: width*0.15,
-  //       child: Material(
-  //         color: Colors.transparent,
-  //         child: Container(
-  //
-  //           height: height*0.15,
-  //           width: width*0.7,
-  //           decoration: BoxDecoration(
-  //             color: Colors.green,
-  //             borderRadius: BorderRadius.circular(5),
-  //           ),
-  //           child: Column(
-  //             children: [
-  //               Padding(padding: EdgeInsets.fromLTRB(230, 0, 0, 2),
-  //                 child: IconButton(
-  //                   icon: Icon(Icons.close),
-  //                   onPressed: () {
-  //                     _removeOverlay();
-  //                   },
-  //                 ),),
-  //               Text(
-  //                 "Return" ,
-  //                 style: TextStyle(color: Colors.white),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  //
-  //   Overlay.of(context)?.insert(overlayEntry!);
-  // }
-  //
-  // void _removeOverlay() {
-  //   if (overlayEntry != null) {
-  //     overlayEntry!.remove();
-  //     overlayEntry = null;
-  //   }
-  // }
 
 }
+
+
+
 
 
 
@@ -596,24 +544,32 @@ const defaultDuration = Duration(hours: 2, minutes: 30);
 
 class Page2 extends StatelessWidget {
   Page2({Key? key}) : super(key: key);
-
-  static LatLng sourceLocation = LatLng(12.989802, 79.971097);
+  late Position currentPosition;
+  static LatLng sourceLocation = LatLng(26.867528847462005, 75.8191444158821);
+  //static LatLng sourceLocation = LatLng(currentPosition.latitude, currentPosition.longitude);
   static LatLng destination = LatLng(12.984397, 79.973972);
   BitmapDescriptor sourceicone = BitmapDescriptor.defaultMarker;
   BitmapDescriptor destinationicone = BitmapDescriptor.defaultMarker;
 
+
+
+
+
   void setCustomMarkerIcon(){
-    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "lib/image/image1.png")
+    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "lib/image/logo.png")
         .then(
           (icon) {
         sourceicone = icon;
       },);
-    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "lib/image/image1.png")
+    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "lib/image/logo.png")
         .then(
           (icon) {
         destinationicone = icon;
       },);
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -745,11 +701,11 @@ class Page2 extends StatelessWidget {
                         icon: sourceicone,
                         position: sourceLocation,
                       ),
-                      Marker(
-                        markerId: MarkerId("source"),
-                        icon: destinationicone,
-                        position: destination,
-                      )
+                      // Marker(
+                      //   markerId: MarkerId("source"),
+                      //   icon: destinationicone,
+                      //   position: destination,
+                      // )
                     },
                   ),
                 ),
@@ -772,6 +728,13 @@ class Page2 extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () async {
                                 ///to do
+                                if (GestureDetector!=null) {
+                                  var snackBar = SnackBar(content: Text('Your allowed to take 10mins break'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }else{
+                                  var snackBar = SnackBar(content: Text('Your not allowed to take break'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red, // Change this to the desired color
@@ -798,7 +761,13 @@ class Page2 extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () async {
                                 ///to do
-                                /// FingerprintManager().performAuthenticationAndPushStatus();
+                                if (GestureDetector!=null) {
+                                  var snackBar = SnackBar(content: Text('Force Allotment has been sent'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }else{
+                                  var snackBar = SnackBar(content: Text('Your not allowed to take break'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red, // Change this to the desired color
@@ -827,6 +796,13 @@ class Page2 extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () async {
                                 ///to do
+                                if (GestureDetector!=null) {
+                                  var snackBar = SnackBar(content: Text('Wait for few min Admin will get back'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }else{
+                                  var snackBar = SnackBar(content: Text('Your not allowed to take break'));
+                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red, // Change this to the desired color

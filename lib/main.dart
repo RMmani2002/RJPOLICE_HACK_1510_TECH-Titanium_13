@@ -1,25 +1,30 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tracking/algorithm.dart';
 import 'package:tracking/homepage.dart';
 import 'package:tracking/login.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'location.dart';
+import 'lock.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(const MyApp());
   _startTimer();
+  checkLocationPermission();
+}
+
+Future<bool> checkLocationPermission() async {
+  PermissionStatus status = await Permission.location.status;
+
+  if (status == PermissionStatus.granted) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 class LatDataProvider with ChangeNotifier {
@@ -64,7 +69,12 @@ class _WrapperState extends State<Wrapper> {
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              return Homepage();
+              bool isFingerprintAuthenticated = true; // Replace with your logic to check fingerprint status
+              if (isFingerprintAuthenticated) {
+                return Homepage();
+              } else {
+                return lock();
+              }
             }
             else {
               return Login();
@@ -75,38 +85,6 @@ class _WrapperState extends State<Wrapper> {
 }
 
 
-// LatLng eventLocation = LatLng(12.989802, 79.971097);
-//
-// void location() async {
-//   // Get the current user location
-//   Position userLocation = await getCurrentLocation();
-//   double distance = calculateDistance(
-//     userLocation.latitude,
-//     userLocation.longitude,
-//     eventLocation.latitude,
-//     eventLocation.longitude,
-//   );
-//   double distanceThreshold = 100.0; // Assume the distance threshold is 100 meters
-//
-//   if (distance <= distanceThreshold) {
-//     print('User is within the specified distance of the event location.');
-//   } else {
-//     print('User is outside the specified distance of the event location.');
-//   }
-// }
-
-
-// Future<Position> getCurrentLocation() async {
-//   Position position = await Geolocator.getCurrentPosition(
-//       desiredAccuracy: LocationAccuracy.high);
-//   return position;
-// }
-//
-// double calculateDistance(double startLatitude, double startLongitude,
-//     double endLatitude, double endLongitude) {
-//   return Geolocator.distanceBetween(
-//       startLatitude, startLongitude, endLatitude, endLongitude);
-// }
 
 void _startTimer() {
   late Timer _timer;
