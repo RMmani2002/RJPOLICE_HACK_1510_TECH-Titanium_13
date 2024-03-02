@@ -7,7 +7,9 @@
         android:label="tracking"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCWVryicWrqM6PqtIYLU6GTM-jLbgzPkpw"/>
+            android:value="
+            ///enter api key for googlemap
+            "/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
